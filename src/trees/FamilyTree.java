@@ -51,8 +51,9 @@ public class FamilyTree
             {
                 // If child.getNodeWithName(targetName) returns a non-null node,
                 // then that's the node we're looking for. Return it.
-            	if (child.getNodeWithName(targetName) != null) {
-            		return child;
+            	TreeNode stuff = child.getNodeWithName(targetName);
+            	if (stuff != null) {
+            		return stuff;
             	}
             }
             
@@ -78,10 +79,10 @@ public class FamilyTree
              *     30  60
              *     
              */
-            
-            while (parent != null) {
-            	ancestors.add(parent);
-            	parent = this.parent;
+            TreeNode currNode = this.parent;
+            while (currNode != null) {
+            	ancestors.add(currNode);
+            	currNode = currNode.parent;
             }
             
             
@@ -112,7 +113,7 @@ public class FamilyTree
 	//
 	// Displays a file browser so that user can select the family tree file.
 	//
-	public FamilyTree(String s) throws IOException, TreeException
+	public FamilyTree() throws IOException, TreeException
 	{
 		// User chooses input file. This block doesn't need any work.
 		FileNameExtensionFilter filter = 
@@ -128,8 +129,8 @@ public class FamilyTree
 
 		// Parse the input file. Create a FileReader that reads treeFile. Create a BufferedReader
 		// that reads from the FileReader.
-		FileReader fr = ???
-		BufferedReader br = ???
+		FileReader fr = new FileReader("/Users/kelaniii/eclipse-workspace/lab12/src/trees/BagginsFamilyTree.txt");
+		BufferedReader br = new BufferedReader(fr);
 		String line;
 		while ((line = br.readLine()) != null)
 			addLine(line);
@@ -142,63 +143,81 @@ public class FamilyTree
 	// Line format is "parent:child1,child2 ..."
 	// Throws TreeException if line is illegal.
 	//
-	private void addLine(String line) throws TreeException
+	private void addLine(String line) throws TreeException, IOException
 	{
 		// Extract parent and array of children.
-		int colonIndex = ?? should be the index of the colon in line.
+		int colonIndex = line.indexOf(':');
 		if (colonIndex < 0)
-			?? throw a TreeException with a useful message
-		String parent = ?? The substring of line that starts at char #0 and ends just before colonIndex. Check the API for 
-				           class java.util.String, method substring(), if you need guidance.
-		String childrenString = ?? The substring of line that starts just after colonIndex and goes through the end of
-				                   the line. You'll use a different version of substring().
-		String[] childrenArray = ?? Call childrenString.split(). Check the API for details. The result will be an array
-				                    of strings, with the separating commas thrown away.
-		
-		// Find parent node. If root is null then the tree is empty and the
-		// parent node must be constructed. Otherwise the parent node should be 
-		// somewhere in the tree.
+		{
+			throw new TreeException("invalid colon index"); 
+		}
+		String parent = line.substring(0, colonIndex); 
+		String childrenString = line.substring(colonIndex+1);
+		String[] childrenArray = childrenString.split(","); 
+//		
+//		// Find parent node. If root is null then the tree is empty and the
+//		// parent node must be constructed. Otherwise the parent node should be 
+//		// somewhere in the tree.
 		TreeNode parentNode;
 		if (root == null)
+		{
 			parentNode = root = new TreeNode(parent);
+		}
+			
 		else
 		{
-			parentNode = root.?????  There's a method in Node that searches for a named node. 
-			??? If the parent node wasn't found, there must have been something wrong in the 
-				data file. Throw an exception.
+			parentNode = root.getNodeWithName(parent); 
+			if (parentNode == null)
+			{
+				throw new TreeException("no parent");
+			}
 		}
-		
-		// Add child nodes to parentNode.
-		?? For each name in childrenArray, create a new node and add that node to parentNode.
+//			There's a method in Node that searches for a named node. 
+//			??? If the parent node wasn't found, there must have been something wrong in the 
+//				data file. Throw an exception.
+//		}
+//		
+//		// Add child nodes to parentNode.
+		for (String name: childrenArray)
+		{
+			TreeNode childNode = new TreeNode(name);
+			parentNode.addChild(childNode);
+			
+		}
+
 	}
 	
 	
 	// Returns the "deepest" node that is an ancestor of the node named name1, and also is an
 	// ancestor of the node named name2.
-	//
 	// "Depth" of a node is the "distance" between that node and the root. The depth of the root is 0. The
 	// depth of the root's immediate children is 1, and so on.
 	//
-	TreeNode getMostRecentCommonAncestor(String name1, String name2) throws TreeException
+	TreeNode getMostRecentCommonAncestor(String name1, String name2) throws TreeException, IOException
 	{
 		// Get nodes for input names.
-		TreeNode node1 = root.???		// node whose name is name1
+		TreeNode node1 = root.getNodeWithName(name1);	// node whose name is name1
 		if (node1 == null)
-			??? Throw a TreeException with a useful message
-		TreeNode node2 = root.???		// node whose name is name2
+		{
+			throw new TreeException("name not found");
+		}
+		TreeNode node2 = root.getNodeWithName(name2);		// node whose name is name2
 		if (node2 == null)
-			??? Throw TreeException with a useful message
+		{
+			throw new TreeException("name not found");
+		}
+
 		
 		// Get ancestors of node1 and node2.
-		ArrayList<TreeNode> ancestorsOf1 = ???
-		ArrayList<TreeNode> ancestorsOf2 = ???
+		ArrayList<TreeNode> ancestorsOf1 = node1.collectAncestorsToList();
+		ArrayList<TreeNode> ancestorsOf2 = node2.collectAncestorsToList();
 		
 		// Check members of ancestorsOf1 in order until you find a node that is also
 		// an ancestor of 2. 
 		for (TreeNode n1: ancestorsOf1)
 			if (ancestorsOf2.contains(n1))
 				return n1;
-		
+	
 		// No common ancestor.
 		return null;
 	}

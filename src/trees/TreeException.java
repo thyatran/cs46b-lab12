@@ -2,7 +2,7 @@ package trees;
 
 import java.io.IOException;
 
-public class TreeException extends FamilyTree
+public class TreeException extends Throwable
 {
 	public TreeException(String s) throws IOException
 	{
